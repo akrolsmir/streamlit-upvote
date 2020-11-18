@@ -1,6 +1,15 @@
 import streamlit as st
 from google.cloud import firestore
 
+import hashlib
+import base64
+
+
+def hash_to_id(input_string):
+    hasher = hashlib.sha1(input_string.encode())
+    return base64.urlsafe_b64encode(hasher.digest()).decode()[:8]
+
+
 # DAMMIT fe0f!
 ballot_icon = "https://twemoji.maxcdn.com/2/72x72/1f5f3.png"
 st.set_page_config(page_title="Streamlit Upvote", page_icon=ballot_icon)
@@ -30,9 +39,9 @@ for doc in ideas_ref.stream():
 # Let users create new ideas
 name = st.text_input("Enter your name")
 text = st.text_input("What do you want to see in Streamlit?")
-idea_id = st.text_input("idea_id")
+idea_id = hash_to_id(text)
 
-if name and text and idea_id:
+if name and text:
     doc_ref = db.collection("ideas").document(idea_id)
     doc_ref.set({"name": name, "text": text, "votes": 1})
     st.write("Press `r` to refresh!")
