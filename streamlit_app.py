@@ -24,6 +24,7 @@ db = firestore.Client.from_service_account_json(
 ballot_icon = "https://twemoji.maxcdn.com/2/72x72/1f5f3.png"
 st.set_page_config(page_title="Streamlit Upvote", page_icon=ballot_icon)
 
+st.title("What ideas do you have for Streamlit?")
 name = st.text_input("Enter your name to upvote & suggest ideas!")
 
 # Let users create new ideas
@@ -38,7 +39,6 @@ if name:
 
 def doc_to_idea(doc):
     # idea is like {id: "b0xF0ss", "name": Austin, "text": ..., "voters": ['Austin', 'Alex']}
-    st.write(doc)
     idea = doc.to_dict()
     idea["id"] = doc.id
     return idea
