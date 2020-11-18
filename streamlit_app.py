@@ -35,13 +35,19 @@ if name:
         doc_ref = db.collection("ideas").document(idea_id)
         doc_ref.set({"name": name, "text": text, "voters": [name]})
 
-# Get and display all ideas
-ideas_ref = db.collection("ideas")
-for doc in ideas_ref.stream():
+
+def doc_to_idea(doc):
     # idea is like {id: "b0xF0ss", "name": Austin, "text": ..., "voters": ['Austin', 'Alex']}
+    st.write(doc)
     idea = doc.to_dict()
     idea["id"] = doc.id
+    return idea
 
+
+# Get and display all ideas
+ideas = [doc_to_idea(doc) for doc in db.collection("ideas").stream()]
+ideas.sort(key=lambda idea: -len(idea["voters"]))
+for idea in ideas:
     col1, col2 = st.beta_columns([6, 2])
     col1.subheader(idea["text"])
     expander = col2.beta_expander(upvotes_string(len(idea["voters"])))
