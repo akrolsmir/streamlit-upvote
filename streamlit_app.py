@@ -43,8 +43,16 @@ for doc in ideas_ref.stream():
     col2.subheader(idea["text"])
     col3.subheader(idea["name"])
 
+    # If upvoted: add the name to the list of voters
     if name and (name not in idea["voters"]) and upvoted:
         doc_ref = db.collection("ideas").document(idea["id"])
         doc_ref.update({"voters": idea["voters"] + [name]})
-        # TODO: Rerun page after an upvote?
+        st.experimental_rerun()
+
+    # Or, if unvoted: remove the name
+    if name and (name in idea["voters"]) and not upvoted:
+        doc_ref = db.collection("ideas").document(idea["id"])
+        idea["voters"].remove(name)
+        doc_ref.update({"voters": idea["voters"]})
+        st.experimental_rerun()
 
