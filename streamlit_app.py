@@ -50,24 +50,25 @@ def doc_to_idea(doc):
 ideas = [doc_to_idea(doc) for doc in db.collection("ideas").stream()]
 ideas.sort(key=lambda idea: -len(idea["voters"]))
 for idea in ideas:
-    col1, col2 = st.beta_columns([6, 2])
-    discuss = col1.beta_expander(idea["text"])
-    discuss.code(idea["discuss"] if idea["discuss"] else "Discuss here!")
-    if name:
-        discuss_text = discuss.text_area(
-            f"Additional thoughts, {name}?", key=idea["id"],
-        )
-        discussed = discuss.button("Submit", key=idea["id"])
+    expander = st.beta_expander(
+        upvotes_string(len(idea["voters"])) + " - " + idea["text"]
+    )
+    col1, col2 = expander.beta_columns([2, 6])
+    with col1:
+        if name:
+            upvoted = st.checkbox(
+                "Upvote 👍", value=name in idea["voters"], key=idea["id"]
+            )
+        st.write(f"📢 {idea['name']}")
+        for voter in idea["voters"]:
+            if voter != idea["name"]:
+                st.write(voter)
 
-    voters = col2.beta_expander(upvotes_string(len(idea["voters"])))
-    if name:
-        upvoted = voters.checkbox(
-            "Upvote 👍", value=name in idea["voters"], key=idea["id"]
-        )
-    voters.write(f"(from {idea['name']})")
-    for voter in idea["voters"]:
-        if voter != idea["name"]:
-            voters.write(voter)
+    with col2:
+        st.code(idea["discuss"] if idea["discuss"] else "*crickets* 🦗. Discuss here!")
+        if name:
+            discuss_text = st.text_area(f"Any thoughts, {name}?", key=idea["id"],)
+            discussed = st.button("Submit", key=idea["id"])
 
     # Now see if we need to update our Firestore database
     doc_ref = db.collection("ideas").document(idea["id"])
