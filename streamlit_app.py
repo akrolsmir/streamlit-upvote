@@ -24,7 +24,7 @@ db = firestore.Client.from_service_account_json(
 ballot_icon = "https://twemoji.maxcdn.com/2/72x72/1f5f3.png"
 st.set_page_config(page_title="Streamlit Upvote", page_icon=ballot_icon)
 
-st.title("What ideas do you have for Streamlit?")
+st.title("What are your 🤔💭💡 for Streamlit?")
 name = st.text_input("Enter your name to upvote, discuss, or suggest ideas!")
 
 # Let users create new ideas
@@ -54,7 +54,10 @@ for idea in ideas:
     discuss = col1.beta_expander(idea["text"])
     if name:
         discuss_text = discuss.text_area(
-            "Any additional thoughts?", value=idea["discuss"], key=idea["id"]
+            "Any additional thoughts?",
+            value=idea["discuss"],
+            height=250,
+            key=idea["id"],
         )
         discussed = discuss.button("Submit", key=idea["id"])
     else:
@@ -83,6 +86,7 @@ for idea in ideas:
         doc_ref.update({"voters": idea["voters"]})
         st.experimental_rerun()
 
+    # If the user submitted a discussion change
     if name and discussed:
         doc_ref = db.collection("ideas").document(idea["id"])
         doc_ref.update({"discuss": discuss_text})
