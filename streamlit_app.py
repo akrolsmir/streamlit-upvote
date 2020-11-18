@@ -10,6 +10,12 @@ def hash_to_id(input_string):
     return base64.urlsafe_b64encode(hasher.digest()).decode()[:8]
 
 
+def upvotes_string(number):
+    if number <= 7:
+        return "👍" * number
+    return f"👍 x {number}"
+
+
 db = firestore.Client.from_service_account_json(
     "melodic-star-firebase-adminsdk-pmil4-6250789447.json"
 )
@@ -38,13 +44,15 @@ for doc in ideas_ref.stream():
 
     col1, col2 = st.beta_columns([6, 2])
     col1.subheader(idea["text"])
-    expander = col2.beta_expander(f"{len(idea['voters'])} Votes")
-    expander.write(f"(by {idea['name']})")
+    expander = col2.beta_expander(upvotes_string(len(idea["voters"])))
+    expander.write(f"(from {idea['name']})")
     for voter in idea["voters"]:
         if voter != idea["name"]:
             expander.write(voter)
     if name:
-        upvoted = col2.checkbox("Upvote", value=name in idea["voters"], key=idea["id"])
+        upvoted = col2.checkbox(
+            "Upvote 👍", value=name in idea["voters"], key=idea["id"]
+        )
 
     # If upvoted: add the name to the list of voters
     if name and (name not in idea["voters"]) and upvoted:
