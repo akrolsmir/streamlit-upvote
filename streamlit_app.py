@@ -36,12 +36,15 @@ for doc in ideas_ref.stream():
     idea = doc.to_dict()
     idea["id"] = doc.id
 
-    col1, col2, col3 = st.beta_columns([2, 4, 2])
-    col1.subheader(f"{len(idea['voters'])} Votes")
+    col1, col2 = st.beta_columns([6, 2])
+    col1.subheader(idea["text"])
+    expander = col2.beta_expander(f"{len(idea['voters'])} Votes")
+    expander.write(f"(by {idea['name']})")
+    for voter in idea["voters"]:
+        if voter != idea["name"]:
+            expander.write(voter)
     if name:
-        upvoted = col1.checkbox("Upvote", value=name in idea["voters"], key=idea["id"])
-    col2.subheader(idea["text"])
-    col3.subheader(idea["name"])
+        upvoted = col2.checkbox("Upvote", value=name in idea["voters"], key=idea["id"])
 
     # If upvoted: add the name to the list of voters
     if name and (name not in idea["voters"]) and upvoted:
