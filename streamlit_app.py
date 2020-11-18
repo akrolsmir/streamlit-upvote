@@ -25,7 +25,7 @@ ballot_icon = "https://twemoji.maxcdn.com/2/72x72/1f5f3.png"
 st.set_page_config(page_title="Streamlit Upvote", page_icon=ballot_icon)
 
 st.title("What ideas do you have for Streamlit?")
-name = st.text_input("Enter your name to upvote & suggest ideas!")
+name = st.text_input("Enter your name to upvote, discuss, or suggest ideas!")
 
 # Let users create new ideas
 if name:
@@ -41,6 +41,8 @@ def doc_to_idea(doc):
     # idea is like {id: "b0xF0ss", "name": Austin, "text": ..., "voters": ['Austin', 'Alex']}
     idea = doc.to_dict()
     idea["id"] = doc.id
+    if "discuss" not in idea:
+        idea["discuss"] = "Discuss here!"
     return idea
 
 
@@ -49,16 +51,24 @@ ideas = [doc_to_idea(doc) for doc in db.collection("ideas").stream()]
 ideas.sort(key=lambda idea: -len(idea["voters"]))
 for idea in ideas:
     col1, col2 = st.beta_columns([6, 2])
-    col1.subheader(idea["text"])
-    expander = col2.beta_expander(upvotes_string(len(idea["voters"])))
-    expander.write(f"(from {idea['name']})")
-    for voter in idea["voters"]:
-        if voter != idea["name"]:
-            expander.write(voter)
+    discuss = col1.beta_expander(idea["text"])
     if name:
-        upvoted = col2.checkbox(
+        discuss_text = discuss.text_area(
+            "Any additional thoughts?", value=idea["discuss"], key=idea["id"]
+        )
+        discussed = discuss.button("Submit", key=idea["id"])
+    else:
+        discuss.code(idea["discuss"])
+
+    voters = col2.beta_expander(upvotes_string(len(idea["voters"])))
+    if name:
+        upvoted = voters.checkbox(
             "Upvote 👍", value=name in idea["voters"], key=idea["id"]
         )
+    voters.write(f"(from {idea['name']})")
+    for voter in idea["voters"]:
+        if voter != idea["name"]:
+            voters.write(voter)
 
     # If upvoted: add the name to the list of voters
     if name and (name not in idea["voters"]) and upvoted:
@@ -71,5 +81,10 @@ for idea in ideas:
         doc_ref = db.collection("ideas").document(idea["id"])
         idea["voters"].remove(name)
         doc_ref.update({"voters": idea["voters"]})
+        st.experimental_rerun()
+
+    if name and discussed:
+        doc_ref = db.collection("ideas").document(idea["id"])
+        doc_ref.update({"discuss": discuss_text})
         st.experimental_rerun()
 
