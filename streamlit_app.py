@@ -37,8 +37,8 @@ if name:
         doc_ref.set({"name": name, "text": text, "voters": [name]})
 
 
+# idea is like {id: "b0xF0ss", "name": Austin, "text": ..., "voters": ['Austin', 'Alex']}
 def doc_to_idea(doc):
-    # idea is like {id: "b0xF0ss", "name": Austin, "text": ..., "voters": ['Austin', 'Alex']}
     idea = doc.to_dict()
     idea["id"] = doc.id
     if "discuss" not in idea:
@@ -65,7 +65,8 @@ for idea in ideas:
                 st.write(voter)
 
     with col2:
-        st.code(idea["discuss"] if idea["discuss"] else "*crickets* 🦗. Discuss here!")
+        st.subheader("Discussion")
+        st.code(idea["discuss"] if idea["discuss"] else "*crickets* 🦗")
         if name:
             discuss_text = st.text_area(f"Any thoughts, {name}?", key=idea["id"],)
             discussed = st.button("Submit", key=idea["id"])
