@@ -24,28 +24,27 @@ name = st.text_input("Enter your name to upvote & suggest ideas!")
 if name:
     text = st.text_input("What do you want to see in Streamlit?")
     submit = st.button("Submit")
-    idea_id = hash_to_id(text)
-
-if name and text and submit:
-    doc_ref = db.collection("ideas").document(idea_id)
-    doc_ref.set({"name": name, "text": text, "votes": 1})
+    if text and submit:
+        idea_id = hash_to_id(text)
+        doc_ref = db.collection("ideas").document(idea_id)
+        doc_ref.set({"name": name, "text": text, "voters": [name]})
 
 # Get and display all ideas
 ideas_ref = db.collection("ideas")
 for doc in ideas_ref.stream():
-    # idea is like {id: "b0xF0ss", "name": Austin, "text": ..., "votes": 1}
+    # idea is like {id: "b0xF0ss", "name": Austin, "text": ..., "voters": ['Austin', 'Alex']}
     idea = doc.to_dict()
     idea["id"] = doc.id
 
     col1, col2, col3 = st.beta_columns([2, 4, 2])
-    col1.subheader(f"{idea['votes']} Votes")
+    col1.subheader(f"{len(idea['voters'])} Votes")
     if name:
-        upvoted = col1.checkbox("Upvote", key=idea["id"])
+        upvoted = col1.checkbox("Upvote", value=name in idea["voters"], key=idea["id"])
     col2.subheader(idea["text"])
     col3.subheader(idea["name"])
 
-    if name and upvoted:
+    if name and (name not in idea["voters"]) and upvoted:
         doc_ref = db.collection("ideas").document(idea["id"])
-        doc_ref.update({"votes": idea["votes"] + 1})
+        doc_ref.update({"voters": idea["voters"] + [name]})
         # TODO: Rerun page after an upvote?
 
