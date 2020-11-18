@@ -42,7 +42,7 @@ def doc_to_idea(doc):
     idea = doc.to_dict()
     idea["id"] = doc.id
     if "discuss" not in idea:
-        idea["discuss"] = "Discuss here!"
+        idea["discuss"] = ""
     return idea
 
 
@@ -52,16 +52,12 @@ ideas.sort(key=lambda idea: -len(idea["voters"]))
 for idea in ideas:
     col1, col2 = st.beta_columns([6, 2])
     discuss = col1.beta_expander(idea["text"])
+    discuss.code(idea["discuss"] if idea["discuss"] else "Discuss here!")
     if name:
         discuss_text = discuss.text_area(
-            "Any additional thoughts?",
-            value=idea["discuss"],
-            height=250,
-            key=idea["id"],
+            f"Additional thoughts, {name}?", key=idea["id"],
         )
         discussed = discuss.button("Submit", key=idea["id"])
-    else:
-        discuss.code(idea["discuss"])
 
     voters = col2.beta_expander(upvotes_string(len(idea["voters"])))
     if name:
@@ -73,22 +69,21 @@ for idea in ideas:
         if voter != idea["name"]:
             voters.write(voter)
 
+    # Now see if we need to update our Firestore database
+    doc_ref = db.collection("ideas").document(idea["id"])
     # If upvoted: add the name to the list of voters
     if name and (name not in idea["voters"]) and upvoted:
-        doc_ref = db.collection("ideas").document(idea["id"])
         doc_ref.update({"voters": idea["voters"] + [name]})
         st.experimental_rerun()
 
     # Or, if unvoted: remove the name
     if name and (name in idea["voters"]) and not upvoted:
-        doc_ref = db.collection("ideas").document(idea["id"])
         idea["voters"].remove(name)
         doc_ref.update({"voters": idea["voters"]})
         st.experimental_rerun()
 
-    # If the user submitted a discussion change
+    # If the user submitted a line, append it to the discussion
     if name and discussed:
-        doc_ref = db.collection("ideas").document(idea["id"])
-        doc_ref.update({"discuss": discuss_text})
+        doc_ref.update({"discuss": f"{idea['discuss']}\n{name}: {discuss_text}"})
         st.experimental_rerun()
 
